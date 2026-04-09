@@ -107,8 +107,8 @@ if __name__ == "__main__":
     )
     chunker = SemanticChunker(
         embeddings=hf_embeddings,
-        breakpoint_threshold_type="percentile",  # splits at biggest semantic jumps
-        breakpoint_threshold_amount=85           # top 15% dissimilar points = new chunk
+        breakpoint_threshold_type="percentile",  
+        breakpoint_threshold_amount=85           
     )
 
     embedder = EmbeddingModel()

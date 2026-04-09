@@ -1,3 +1,5 @@
+import html
+import markdown as mdlib
 import streamlit as st
 import requests
 
@@ -135,7 +137,6 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
     border-radius: 16px;
     font-size: 0.95rem;
     line-height: 1.65;
-    white-space: pre-wrap;
     word-break: break-word;
 }
 .bubble.user {
@@ -143,6 +144,7 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
     color: #ececec;
     border: 1px solid #3d3d3d;
     border-top-right-radius: 4px;
+    white-space: pre-wrap;
 }
 .bubble.agent {
     background: transparent;
@@ -150,6 +152,85 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
     border: none;
     padding-left: 0;
 }
+
+/* ── Markdown inside agent bubble ── */
+.bubble.agent h1,
+.bubble.agent h2,
+.bubble.agent h3 {
+    font-family: 'Instrument Serif', serif;
+    color: #ececec;
+    font-weight: 400;
+    margin: 1rem 0 0.4rem;
+    line-height: 1.3;
+}
+.bubble.agent h1 { font-size: 1.35rem; }
+.bubble.agent h2 { font-size: 1.15rem; }
+.bubble.agent h3 { font-size: 1rem; color: #10a37f; }
+.bubble.agent p  { margin-bottom: 0.65rem; }
+.bubble.agent p:last-child { margin-bottom: 0; }
+.bubble.agent strong { color: #ececec; font-weight: 500; }
+.bubble.agent em { color: #b0b0c0; font-style: italic; }
+.bubble.agent hr {
+    border: none;
+    border-top: 1px solid #3d3d3d;
+    margin: 0.75rem 0;
+}
+.bubble.agent ul,
+.bubble.agent ol {
+    padding-left: 1.4rem;
+    margin-bottom: 0.65rem;
+}
+.bubble.agent li { margin-bottom: 0.3rem; }
+.bubble.agent code {
+    background: #2f2f2f;
+    border: 1px solid #3d3d3d;
+    border-radius: 4px;
+    padding: 0.1rem 0.35rem;
+    font-size: 0.88em;
+    color: #10a37f;
+    font-family: 'Courier New', monospace;
+}
+.bubble.agent pre {
+    background: #1a1a1a;
+    border: 1px solid #3d3d3d;
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    overflow-x: auto;
+    margin-bottom: 0.65rem;
+}
+.bubble.agent pre code {
+    background: transparent;
+    border: none;
+    padding: 0;
+    color: #ececec;
+}
+.bubble.agent blockquote {
+    border-left: 3px solid #10a37f;
+    padding-left: 0.9rem;
+    color: #8e8ea0;
+    margin: 0.5rem 0;
+    font-style: italic;
+}
+.bubble.agent table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 0.65rem;
+    font-size: 0.9rem;
+}
+.bubble.agent th {
+    background: #2f2f2f;
+    color: #10a37f;
+    padding: 0.4rem 0.8rem;
+    border: 1px solid #3d3d3d;
+    text-align: left;
+    font-weight: 500;
+}
+.bubble.agent td {
+    padding: 0.4rem 0.8rem;
+    border: 1px solid #2f2f2f;
+    color: #ececec;
+}
+.bubble.agent tr:nth-child(even) td { background: #1e1e1e; }
 
 /* ── Thinking dots ── */
 .thinking {
@@ -284,25 +365,27 @@ if not st.session_state.messages:
 
 # ── Render chat history ────────────────────────────────────────────────────────
 def render_messages():
-    for idx, msg in enumerate(st.session_state.messages):
-        role = msg["role"]
+    for msg in st.session_state.messages:
+        role    = msg["role"]
         content = msg["content"]
 
-        # Escape HTML in content
-        import html
-        safe_content = html.escape(content).replace("\n", "<br>")
-
         if role == "user":
+            safe_content = html.escape(content).replace("\n", "<br>")
             st.markdown(f"""
             <div class="msg-row user">
                 <div class="bubble user">{safe_content}</div>
                 <div class="avatar user">You</div>
             </div>""", unsafe_allow_html=True)
         else:
+            # Convert markdown → HTML so headings, bold, lists, etc. render properly
+            rendered = mdlib.markdown(
+                content,
+                extensions=["nl2br", "tables", "fenced_code"]
+            )
             st.markdown(f"""
             <div class="msg-row agent">
                 <div class="avatar agent">⚖</div>
-                <div class="bubble agent">{safe_content}</div>
+                <div class="bubble agent">{rendered}</div>
             </div>
             <div class="msg-divider"></div>""", unsafe_allow_html=True)
 
@@ -310,7 +393,7 @@ render_messages()
 
 # ── Handle API call ────────────────────────────────────────────────────────────
 def ask(query: str):
-    # Strip pill emoji prefix if from suggestion button
+    # Strip suggestion-pill emoji prefix if present
     clean_query = query.lstrip("📜🏛⚖🔒 ")
 
     st.session_state.messages.append({"role": "user", "content": clean_query})
@@ -328,21 +411,27 @@ def ask(query: str):
 
     try:
         res = requests.post(
-            "http://localhost:8001/chat",
+            "http://backend:8001/chat",
             json={"message": clean_query},
-            timeout=120
+            timeout=120,
         )
         answer = res.json().get("response", "Sorry, I could not get a response.")
-    except requests.exceptions.Timeout:
-        answer = "⚠️ Request timed out. Please try again."
+
+    except requests.exceptions.ConnectionError:
+        answer = "⚠️ Cannot connect to backend. Is the server running?"
+
+    except ValueError:
+        answer = "⚠️ Invalid response from server."
+
     except Exception as e:
-        answer = f"⚠️ Error connecting to server: {str(e)}"
+        answer = f"⚠️ Unexpected error: {str(e)}"
 
     thinking_placeholder.empty()
+
     st.session_state.messages.append({"role": "assistant", "content": answer})
     st.rerun()
 
-# ── Process pending ────────────────────────────────────────────────────────────
+# ── Process pending suggestion ─────────────────────────────────────────────────
 if st.session_state.pending:
     query = st.session_state.pending
     st.session_state.pending = None

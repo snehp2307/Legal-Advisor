@@ -27,7 +27,6 @@ system_prompt = """You are a legal assistant AI. Help users understand legal con
 search legal documents like IPC and Constitution, and simplify complex legal language 
 into easy explanations. Always be accurate and cite relevant sections when possible."""
 
-# 🔹 Create agent (LangGraph style - no AgentExecutor needed)
 agent = create_react_agent(
     model=llm,
     tools=tools,
