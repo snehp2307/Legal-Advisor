@@ -41,7 +41,7 @@ Instructions:
 """
 
 
-def generate_answer(query):
+async def generate_answer(query):
     # 🔹 Step 1 — Retrieve
     context_chunks = retrieve(query)
 

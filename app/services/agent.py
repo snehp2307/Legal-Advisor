@@ -6,12 +6,12 @@ from app.services.tools import search_legal_docs, simplify_legal_text
 # 🔹 Define tools
 tools = [
     Tool(
-        name="Legal_Search",          # ✅ underscore instead of space
+        name="Legal_Search",          
         func=search_legal_docs,
         description="Search legal documents like IPC, Constitution, etc."
     ),
     Tool(
-        name="Simplify_Legal_Text",   # ✅ underscores instead of spaces
+        name="Simplify_Legal_Text",  
         func=simplify_legal_text,
         description="Simplify complex legal language into easy explanation"
     )
@@ -33,7 +33,7 @@ agent = create_react_agent(
     prompt=system_prompt
 )
 
-def ask_agent(query: str):
+async def ask_agent(query: str):
     result = agent.invoke({
         "messages": [("user", query)]
     })
