@@ -1,16 +1,11 @@
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
-
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from app.services.agent import ask_agent
 
-MAX_WORKERS      = 8        
-AGENT_TIMEOUT    = 90        
-
-_executor = ThreadPoolExecutor(max_workers=MAX_WORKERS, thread_name_prefix="lexai")
+AGENT_TIMEOUT = 90
 
 app = FastAPI()
 
@@ -27,29 +22,18 @@ class ChatRequest(BaseModel):
     message: str
 
 
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Gracefully drain in-flight requests on shutdown."""
-    _executor.shutdown(wait=True)
-
-
 @app.get("/health")
 def health():
-    return {
-        "status": "ok",
-        "pool_max_workers": MAX_WORKERS,
-    }
+    return {"status": "ok"}
 
 
 @app.post("/chat")
 async def chat(req: ChatRequest):
     try:
         print(f"[chat] incoming: {req.message[:60]!r}")
-        loop = asyncio.get_event_loop()
 
-        # asyncio.wait_for enforces a hard deadline even if the thread hangs
         response = await asyncio.wait_for(
-            loop.run_in_executor(_executor, ask_agent, req.message),
+            ask_agent(req.message),
             timeout=AGENT_TIMEOUT,
         )
 
@@ -57,12 +41,13 @@ async def chat(req: ChatRequest):
         return {"response": response}
 
     except asyncio.TimeoutError:
-        print(f"[chat] TIMEOUT after {AGENT_TIMEOUT}s for: {req.message[:60]!r}")
+        print(f"[chat] TIMEOUT after {AGENT_TIMEOUT}s")
         raise HTTPException(
             status_code=504,
-            detail=f"Agent timed out after {AGENT_TIMEOUT}s. Try a shorter query.",
+            detail=f"Agent timed out after {AGENT_TIMEOUT}s",
         )
 
     except Exception as e:
         print(f"[chat] ERROR: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+    

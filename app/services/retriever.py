@@ -7,12 +7,8 @@ embedder = EmbeddingModel()
 # ── Constants ──────────────────────────────────────────────────────────────────
 LAW_BOOST        = 1.5   # Score multiplier for matching law type
 KEYWORD_BOOST    = 0.5   # Score bonus per matching keyword in title
-FETCH_MULTIPLIER = 4     # How many extra results to fetch before trimming
+FETCH_MULTIPLIER = 2    # How many extra results to fetch before trimming
 
-
-# ── Law type detection ─────────────────────────────────────────────────────────
-# Maps each law to a list of (keyword, weight) pairs.
-# Higher weight = stronger signal for that law.
 
 LAW_KEYWORDS = {
     "constitution": [
@@ -193,7 +189,7 @@ def rerank_by_keywords(results: list, query: str) -> list:
 
 
 # ── Main entry point ───────────────────────────────────────────────────────────
-def retrieve(query: str, top_k: int = 5) -> list[dict]:
+def retrieve(query: str, top_k: int = 3) -> list[dict]:
     """Full retrieval pipeline:
     1. Detect law type
     2. Build enriched query
@@ -202,12 +198,11 @@ def retrieve(query: str, top_k: int = 5) -> list[dict]:
     5. Keyword rerank
     6. Return top_k results
     """
-    query = query.lower()
+    query = query.lower().strip()
 
     law_type       = detect_law_type(query)
     enriched_query = build_enriched_query(query, law_type)
 
-    print(f"[DEBUG] Law: {law_type} | Query: {enriched_query}")
 
     results = fetch_results(query, enriched_query, fetch_limit=top_k * FETCH_MULTIPLIER)
 
