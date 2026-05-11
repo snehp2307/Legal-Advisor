@@ -30,6 +30,24 @@ services:
     command: streamlit run ui.py --server.port=8501 --server.address=0.0.0.0
     volumes:
       - .:/app
+    
+    
+  redis:
+    image: redis:7
+    container_name: legal_ai_redis
+    ports:
+      - "6379:6379"
+  
+
+  postgres:
+    image: postgres:15
+    container_name: legal_ai_postgres
+    environment:
+      POSTGRES_DB: legal_ai
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5432:5432"
 
 volumes:
   qdrant_storage:

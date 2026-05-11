@@ -203,8 +203,8 @@ def evaluate():
 
         try:
             if i > 0:
-                print(f"    ⏸  Waiting 5s before next question...")
-                time.sleep(5)  # baseline gap — reduces chance of hitting limit at all
+                print(f"    ⏸  Waiting 10s before next question...")
+                time.sleep(10)  # baseline gap — reduces chance of hitting limit at all
 
             answer, latency = call_with_retry(question)
             total_time += latency

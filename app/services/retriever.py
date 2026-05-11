@@ -4,10 +4,10 @@ from app.utils.config import COLLECTION_NAME
 
 embedder = EmbeddingModel()
 
-# ── Constants ──────────────────────────────────────────────────────────────────
-LAW_BOOST        = 1.5   # Score multiplier for matching law type
-KEYWORD_BOOST    = 0.5   # Score bonus per matching keyword in title
-FETCH_MULTIPLIER = 2    # How many extra results to fetch before trimming
+
+LAW_BOOST        = 1.5  
+KEYWORD_BOOST    = 0.5  
+FETCH_MULTIPLIER = 2    
 
 
 LAW_KEYWORDS = {

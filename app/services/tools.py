@@ -1,5 +1,6 @@
 from app.services.retriever import retrieve
 import asyncio
+from app.services.rag_pipeline import generate_answer
 
 def search_legal_docs(query:str):
     results = retrieve(query)
@@ -18,7 +19,7 @@ def simplify_legal_text(text: str):
     return f"Explain this legal text in simple words:\n{text}"
 
 async def search_legal_docs_async(query: str):
-    return await asyncio.to_thread(search_legal_docs, query)
+    return await generate_answer(query)
 
 
 async def simplify_legal_text_async(text: str):

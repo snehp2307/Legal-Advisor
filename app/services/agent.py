@@ -7,7 +7,7 @@ tools = [
     Tool(
         name="Legal_Search",
         coroutine=search_legal_docs_async,
-        description="Search legal documents",
+        description="Use this to answer legal questions using IPC, Constitution, and legal documents",
         func=lambda x: x,
     ),
     Tool(
@@ -21,14 +21,14 @@ tools = [
 llm = ChatMistralAI(
     model="mistral-small-latest",
     temperature=0.3,
-    max_tokens=512,
+    max_tokens=5000,
 )
 
 system_prompt = """You are a legal assistant AI. Help users understand legal concepts, 
 search legal documents like IPC and Constitution, and simplify complex legal language. 
 Always cite relevant sections when possible. Keep answers concise."""
 
-# ✅ No prompt/state_modifier kwarg
+
 agent = create_react_agent(
     model=llm,
     tools=tools,
@@ -39,7 +39,7 @@ async def ask_agent(query: str):
         result = await agent.ainvoke(
             {
                 "messages": [
-                    ("system", system_prompt),  # ✅ injected here instead
+                    ("system", system_prompt),  
                     ("user", query)
                 ]
             },

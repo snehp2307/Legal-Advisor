@@ -2,9 +2,10 @@ import asyncio
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from app.db.models import create_tables
 
 from app.services.agent import ask_agent
-
+create_tables()
 AGENT_TIMEOUT = 90
 
 app = FastAPI()

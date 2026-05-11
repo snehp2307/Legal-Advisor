@@ -27,3 +27,5 @@ requests
 httpx
 tqdm
 markdown
+psycopg2-binary
+redis
