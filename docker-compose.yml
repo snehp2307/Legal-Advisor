@@ -4,11 +4,18 @@ services:
     container_name: legal_ai_backend
     ports:
       - "8001:8001"
-    depends_on:
+    depends_on:          # ← ADD these two
       - qdrant
+      - postgres
+      - redis
     environment:
       - QDRANT_HOST=qdrant
       - QDRANT_PORT=6333
+      - POSTGRES_HOST=postgres    # ← ADD
+      - POSTGRES_DB=legal_ai      # ← ADD
+      - POSTGRES_USER=postgres    # ← ADD
+      - POSTGRES_PASSWORD=admin   # ← ADD
+      - REDIS_HOST=redis          # ← ADD
     volumes:
       - .:/app
 
